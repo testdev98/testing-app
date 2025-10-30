@@ -14,6 +14,8 @@ import com.niftywidgetapp.R;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.select.Elements;
+import java.util.Calendar;
+import java.util.TimeZone;
 
 public class NiftyWidgetService extends Service {
 
@@ -69,7 +71,49 @@ public class NiftyWidgetService extends Service {
         AlarmManager alarmManager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
         Intent intent = new Intent(this, NiftyWidgetService.class);
         PendingIntent pendingIntent = PendingIntent.getService(this, 0, intent, PendingIntent.FLAG_IMMUTABLE);
-        alarmManager.set(AlarmManager.ELAPSED_REALTIME, SystemClock.elapsedRealtime() + 60000, pendingIntent);
+
+        long triggerAtMillis;
+        if (isMarketOpen()) {
+            triggerAtMillis = SystemClock.elapsedRealtime() + 5000;
+        } else {
+            triggerAtMillis = getNextMarketOpenTime();
+        }
+
+        alarmManager.set(AlarmManager.ELAPSED_REALTIME, triggerAtMillis, pendingIntent);
+    }
+
+    private boolean isMarketOpen() {
+        Calendar calendar = Calendar.getInstance(TimeZone.getTimeZone("IST"));
+        int dayOfWeek = calendar.get(Calendar.DAY_OF_WEEK);
+        if (dayOfWeek == Calendar.SATURDAY || dayOfWeek == Calendar.SUNDAY) {
+            return false;
+        }
+
+        int hour = calendar.get(Calendar.HOUR_OF_DAY);
+        int minute = calendar.get(Calendar.MINUTE);
+
+        return (hour > 9 || (hour == 9 && minute >= 15)) && (hour < 15 || (hour == 15 && minute < 30));
+    }
+
+    private long getNextMarketOpenTime() {
+        Calendar calendar = Calendar.getInstance(TimeZone.getTimeZone("IST"));
+        int dayOfWeek = calendar.get(Calendar.DAY_OF_WEEK);
+        int hour = calendar.get(Calendar.HOUR_OF_DAY);
+
+        if (dayOfWeek == Calendar.FRIDAY && hour >= 15) {
+            calendar.add(Calendar.DATE, 3);
+        } else if (dayOfWeek == Calendar.SATURDAY) {
+            calendar.add(Calendar.DATE, 2);
+        } else if (hour >= 15) {
+            calendar.add(Calendar.DATE, 1);
+        }
+
+        calendar.set(Calendar.HOUR_OF_DAY, 9);
+        calendar.set(Calendar.MINUTE, 15);
+        calendar.set(Calendar.SECOND, 0);
+        calendar.set(Calendar.MILLISECOND, 0);
+
+        return calendar.getTimeInMillis() - System.currentTimeMillis() + SystemClock.elapsedRealtime();
     }
 
     @Override
