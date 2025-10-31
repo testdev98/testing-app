@@ -1,13 +1,19 @@
 package com.niftywidgetapp.widget;
 
 import android.app.AlarmManager;
+import android.app.Notification;
+import android.app.NotificationChannel;
+import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
 import android.appwidget.AppWidgetManager;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
+import android.os.Build;
+import android.os.Handler;
 import android.os.IBinder;
+import android.os.Looper;
 import android.os.SystemClock;
 import android.widget.RemoteViews;
 import com.niftywidgetapp.R;
@@ -24,6 +30,22 @@ public class NiftyWidgetService extends Service {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
+        final String CHANNEL_ID = "NiftyWidgetServiceChannel";
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            NotificationChannel channel = new NotificationChannel(CHANNEL_ID,
+                    "Nifty Widget Service",
+                    NotificationManager.IMPORTANCE_LOW);
+            getSystemService(NotificationManager.class).createNotificationChannel(channel);
+        }
+
+        Notification notification = new Notification.Builder(this, CHANNEL_ID)
+                .setContentTitle("Nifty Widget")
+                .setContentText("Fetching live Nifty 50 data.")
+                .setSmallIcon(R.mipmap.ic_launcher)
+                .build();
+
+        startForeground(1, notification);
+
         fetchDataAndUpdateWidget();
         scheduleNextUpdate();
         return START_STICKY;
@@ -35,22 +57,8 @@ public class NiftyWidgetService extends Service {
             int[] appWidgetIds = appWidgetManager.getAppWidgetIds(new ComponentName(this, NiftyWidgetProvider.class));
 
             try {
-                URL url = new URL("https://www.nseindia.com/api/allIndices");
-                HttpURLConnection connection = (HttpURLConnection) url.openConnection();
-                connection.setRequestProperty("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/108.0.0.0 Safari/537.36");
-                connection.setRequestProperty("Accept", "*/*");
-                connection.setRequestProperty("Accept-Language", "en-US,en;q=0.9");
-
-                BufferedReader in = new BufferedReader(new InputStreamReader(connection.getInputStream()));
-                String inputLine;
-                StringBuilder content = new StringBuilder();
-                while ((inputLine = in.readLine()) != null) {
-                    content.append(inputLine);
-                }
-                in.close();
-                connection.disconnect();
-
-                JSONObject json = new JSONObject(content.toString());
+                String content = NiftyDataFetcher.getNiftyData();
+                JSONObject json = new JSONObject(content);
                 JSONArray data = json.getJSONArray("data");
                 for (int i = 0; i < data.length(); i++) {
                     JSONObject index = data.getJSONObject(i);
@@ -84,19 +92,48 @@ public class NiftyWidgetService extends Service {
         }).start();
     }
 
-    private void scheduleNextUpdate() {
-        AlarmManager alarmManager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
-        Intent intent = new Intent(this, NiftyWidgetService.class);
-        PendingIntent pendingIntent = PendingIntent.getService(this, 0, intent, PendingIntent.FLAG_IMMUTABLE);
+    private final Handler handler = new Handler(Looper.getMainLooper());
+    private final Runnable updateRunnable = new Runnable() {
+        @Override
+        public void run() {
+            if (isMarketOpen()) {
+                fetchDataAndUpdateWidget();
+                handler.postDelayed(this, 5000);
+            } else {
+                scheduleNextUpdate();
+            }
+        }
+    };
 
-        long triggerAtMillis;
-        if (isMarketOpen()) {
-            triggerAtMillis = SystemClock.elapsedRealtime() + 5000;
-        } else {
-            triggerAtMillis = getNextMarketOpenTime();
+    @Override
+    public int onStartCommand(Intent intent, int flags, int startId) {
+        final String CHANNEL_ID = "NiftyWidgetServiceChannel";
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            NotificationChannel channel = new NotificationChannel(CHANNEL_ID,
+                    "Nifty Widget Service",
+                    NotificationManager.IMPORTANCE_LOW);
+            getSystemService(NotificationManager.class).createNotificationChannel(channel);
         }
 
-        alarmManager.set(AlarmManager.ELAPSED_REALTIME, triggerAtMillis, pendingIntent);
+        Notification notification = new Notification.Builder(this, CHANNEL_ID)
+                .setContentTitle("Nifty Widget")
+                .setContentText("Fetching live Nifty 50 data.")
+                .setSmallIcon(R.mipmap.ic_launcher)
+                .build();
+
+        startForeground(1, notification);
+
+        handler.post(updateRunnable);
+        return START_STICKY;
+    }
+
+    private void scheduleNextUpdate() {
+        long nextMarketOpenTime = getNextMarketOpenTime();
+        long delay = nextMarketOpenTime - System.currentTimeMillis();
+        if (delay < 0) {
+            delay = 0;
+        }
+        handler.postDelayed(updateRunnable, delay);
     }
 
     private boolean isMarketOpen() {
