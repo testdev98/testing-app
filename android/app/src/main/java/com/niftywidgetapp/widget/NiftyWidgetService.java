@@ -1,6 +1,5 @@
 package com.niftywidgetapp.widget;
 
-import android.app.AlarmManager;
 import android.app.Notification;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
@@ -122,7 +121,8 @@ public class NiftyWidgetService extends Service {
 
     private void scheduleNextUpdate() {
         long nextMarketOpenTime = getNextMarketOpenTime();
-        long delay = nextMarketOpenTime - System.currentTimeMillis();
+        long currentTime = System.currentTimeMillis();
+        long delay = nextMarketOpenTime - currentTime;
         if (delay < 0) {
             delay = 0;
         }
