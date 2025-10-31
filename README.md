@@ -51,3 +51,23 @@ This is a React Native application that provides a home screen widget to display
 4. **Drag and drop the widget onto your home screen.**
 
 The widget will initially display "Loading..." and then start showing the Nifty 50 data. If there is an error while fetching the data, the widget will display "Error".
+
+## Debugging
+
+If you encounter issues with the widget (e.g., it's stuck on "Loading..." or "Error"), you can view the application's logs to diagnose the problem.
+
+### Using Android Studio
+
+1.  **Open the project in Android Studio**: Open the `android` folder of the project in Android Studio.
+2.  **Open Logcat**: At the bottom of the screen, click on the "Logcat" tab.
+3.  **Filter the logs**: In the search bar of the Logcat window, enter `NiftyWidget` to filter the logs and only see messages from the widget.
+
+### Using the Command Line
+
+1.  **Open a terminal or command prompt.**
+2.  **Run the following command**:
+    ```sh
+    adb logcat -s "NiftyWidget"
+    ```
+
+This will show you the logs from the widget, which can help you identify any errors that are occurring.

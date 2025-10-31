@@ -28,28 +28,6 @@ import java.util.TimeZone;
 
 public class NiftyWidgetService extends Service {
 
-    @Override
-    public int onStartCommand(Intent intent, int flags, int startId) {
-        final String CHANNEL_ID = "NiftyWidgetServiceChannel";
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            NotificationChannel channel = new NotificationChannel(CHANNEL_ID,
-                    "Nifty Widget Service",
-                    NotificationManager.IMPORTANCE_LOW);
-            getSystemService(NotificationManager.class).createNotificationChannel(channel);
-        }
-
-        Notification notification = new Notification.Builder(this, CHANNEL_ID)
-                .setContentTitle("Nifty Widget")
-                .setContentText("Fetching live Nifty 50 data.")
-                .setSmallIcon(R.mipmap.ic_launcher)
-                .build();
-
-        startForeground(1, notification);
-
-        fetchDataAndUpdateWidget();
-        scheduleNextUpdate();
-        return START_STICKY;
-    }
 
     private void fetchDataAndUpdateWidget() {
         new Thread(() -> {
@@ -57,7 +35,7 @@ public class NiftyWidgetService extends Service {
             int[] appWidgetIds = appWidgetManager.getAppWidgetIds(new ComponentName(this, NiftyWidgetProvider.class));
 
             try {
-                String content = NiftyDataFetcher.getNiftyData();
+                String content = NiftyDataFetcher.INSTANCE.getNiftyData();
                 JSONObject json = new JSONObject(content);
                 JSONArray data = json.getJSONArray("data");
                 for (int i = 0; i < data.length(); i++) {
