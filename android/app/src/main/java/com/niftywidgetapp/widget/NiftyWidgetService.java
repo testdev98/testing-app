@@ -11,9 +11,12 @@ import android.os.IBinder;
 import android.os.SystemClock;
 import android.widget.RemoteViews;
 import com.niftywidgetapp.R;
-import org.jsoup.Jsoup;
-import org.jsoup.nodes.Document;
-import org.jsoup.select.Elements;
+import org.json.JSONArray;
+import org.json.JSONObject;
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.net.HttpURLConnection;
+import java.net.URL;
 import java.util.Calendar;
 import java.util.TimeZone;
 
@@ -32,29 +35,43 @@ public class NiftyWidgetService extends Service {
             int[] appWidgetIds = appWidgetManager.getAppWidgetIds(new ComponentName(this, NiftyWidgetProvider.class));
 
             try {
-                Document doc = Jsoup.connect("https://www.nseindia.com/")
-                        .userAgent("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/108.0.0.0 Safari/537.36")
-                        .get();
-                Elements priceElement = doc.select("#tab1_container > div.clearfix.nifty_tab_content > div:nth-child(1) > p > span.tb_val");
-                Elements openElement = doc.select("div.symbol_open h3");
-                Elements highElement = doc.select("div.symbol_high h3");
-                Elements lowElement = doc.select("div.symbol_low h3");
-                Elements closeElement = doc.select("p.symbol_Pclose > span");
+                URL url = new URL("https://www.nseindia.com/api/allIndices");
+                HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+                connection.setRequestProperty("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/108.0.0.0 Safari/537.36");
+                connection.setRequestProperty("Accept", "*/*");
+                connection.setRequestProperty("Accept-Language", "en-US,en;q=0.9");
 
-                String price = priceElement.first().text();
-                String open = openElement.first().text();
-                String high = highElement.first().text();
-                String low = lowElement.first().text();
-                String close = closeElement.first().text();
+                BufferedReader in = new BufferedReader(new InputStreamReader(connection.getInputStream()));
+                String inputLine;
+                StringBuilder content = new StringBuilder();
+                while ((inputLine = in.readLine()) != null) {
+                    content.append(inputLine);
+                }
+                in.close();
+                connection.disconnect();
 
-                for (int appWidgetId : appWidgetIds) {
-                    RemoteViews views = new RemoteViews(getPackageName(), R.layout.nifty_widget_layout);
-                    views.setTextViewText(R.id.nifty_price, price);
-                    views.setTextViewText(R.id.nifty_open, "Open: " + open);
-                    views.setTextViewText(R.id.nifty_high, "High: " + high);
-                    views.setTextViewText(R.id.nifty_low, "Low: " + low);
-                    views.setTextViewText(R.id.nifty_close, "Close: " + close);
-                    appWidgetManager.updateAppWidget(appWidgetId, views);
+                JSONObject json = new JSONObject(content.toString());
+                JSONArray data = json.getJSONArray("data");
+                for (int i = 0; i < data.length(); i++) {
+                    JSONObject index = data.getJSONObject(i);
+                    if (index.getString("indexSymbol").equals("NIFTY 50")) {
+                        String price = index.getString("last");
+                        String open = index.getString("open");
+                        String high = index.getString("high");
+                        String low = index.getString("low");
+                        String close = index.getString("previousClose");
+
+                        for (int appWidgetId : appWidgetIds) {
+                            RemoteViews views = new RemoteViews(getPackageName(), R.layout.nifty_widget_layout);
+                            views.setTextViewText(R.id.nifty_price, price);
+                            views.setTextViewText(R.id.nifty_open, "Open: " + open);
+                            views.setTextViewText(R.id.nifty_high, "High: " + high);
+                            views.setTextViewText(R.id.nifty_low, "Low: " + low);
+                            views.setTextViewText(R.id.nifty_close, "Close: " + close);
+                            appWidgetManager.updateAppWidget(appWidgetId, views);
+                        }
+                        break;
+                    }
                 }
             } catch (Exception e) {
                 e.printStackTrace();
