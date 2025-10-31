@@ -1,0 +1,31 @@
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:padding="16dp">
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Choose a theme for your widget:"
+        android:textSize="18sp" />
+
+    <Button
+        android:id="@+id/button_light"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Light Theme" />
+
+    <Button
+        android:id="@+id/button_dark"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Dark Theme" />
+
+    <Button
+        android:id="@+id/button_blue"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Blue Theme" />
+
+</LinearLayout>

@@ -53,7 +53,10 @@ public class NiftyWidgetService extends Service {
                         String close = index.getString("previousClose");
 
                         for (int appWidgetId : appWidgetIds) {
-                            RemoteViews views = new RemoteViews(getPackageName(), R.layout.nifty_widget_layout);
+                            String theme = getSharedPreferences("widget_themes", MODE_PRIVATE)
+                                    .getString("theme_" + appWidgetId, "light");
+                            int layoutId = getLayoutForTheme(theme);
+                            RemoteViews views = new RemoteViews(getPackageName(), layoutId);
                             views.setTextViewText(R.id.nifty_price, price);
                             views.setTextViewText(R.id.nifty_open, "Open: " + open);
                             views.setTextViewText(R.id.nifty_high, "High: " + high);
@@ -78,9 +81,23 @@ public class NiftyWidgetService extends Service {
 
     private void updateWidgetWithError(AppWidgetManager appWidgetManager, int[] appWidgetIds) {
         for (int appWidgetId : appWidgetIds) {
-            RemoteViews views = new RemoteViews(getPackageName(), R.layout.nifty_widget_layout);
+            String theme = getSharedPreferences("widget_themes", MODE_PRIVATE)
+                    .getString("theme_" + appWidgetId, "light");
+            int layoutId = getLayoutForTheme(theme);
+            RemoteViews views = new RemoteViews(getPackageName(), layoutId);
             views.setTextViewText(R.id.nifty_price, "Error");
             appWidgetManager.updateAppWidget(appWidgetId, views);
+        }
+    }
+
+    private int getLayoutForTheme(String theme) {
+        switch (theme) {
+            case "dark":
+                return R.layout.nifty_widget_layout_dark;
+            case "blue":
+                return R.layout.nifty_widget_layout_blue;
+            default:
+                return R.layout.nifty_widget_layout;
         }
     }
 

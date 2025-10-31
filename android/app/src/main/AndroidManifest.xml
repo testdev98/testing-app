@@ -25,6 +25,13 @@
         </intent-filter>
       </activity>
 
+      <activity android:name=".widget.NiftyWidgetConfigureActivity"
+          android:exported="true">
+          <intent-filter>
+              <action android:name="android.appwidget.action.APPWIDGET_CONFIGURE"/>
+          </intent-filter>
+      </activity>
+
       <receiver android:name=".widget.NiftyWidgetProvider"
           android:exported="false">
           <intent-filter>
