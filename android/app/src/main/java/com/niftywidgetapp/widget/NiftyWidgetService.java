@@ -160,7 +160,7 @@ public class NiftyWidgetService extends Service {
         calendar.set(Calendar.SECOND, 0);
         calendar.set(Calendar.MILLISECOND, 0);
 
-        return calendar.getTimeInMillis() - System.currentTimeMillis() + SystemClock.elapsedRealtime();
+        return calendar.getTimeInMillis();
     }
 
     @Override
