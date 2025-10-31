@@ -15,6 +15,7 @@ import android.os.Handler;
 import android.os.IBinder;
 import android.os.Looper;
 import android.os.SystemClock;
+import android.util.Log;
 import android.widget.RemoteViews;
 import com.niftywidgetapp.R;
 import org.json.JSONArray;
@@ -29,15 +30,20 @@ import java.util.TimeZone;
 public class NiftyWidgetService extends Service {
 
 
+    private static final String TAG = "NiftyWidgetService";
+
     private void fetchDataAndUpdateWidget() {
         new Thread(() -> {
             AppWidgetManager appWidgetManager = AppWidgetManager.getInstance(this);
             int[] appWidgetIds = appWidgetManager.getAppWidgetIds(new ComponentName(this, NiftyWidgetProvider.class));
 
             try {
+                Log.d(TAG, "Fetching Nifty 50 data...");
                 String content = NiftyDataFetcher.INSTANCE.getNiftyData();
+                Log.d(TAG, "API Response: " + content);
                 JSONObject json = new JSONObject(content);
                 JSONArray data = json.getJSONArray("data");
+                boolean nifty50Found = false;
                 for (int i = 0; i < data.length(); i++) {
                     JSONObject index = data.getJSONObject(i);
                     if (index.getString("indexSymbol").equals("NIFTY 50")) {
@@ -56,18 +62,27 @@ public class NiftyWidgetService extends Service {
                             views.setTextViewText(R.id.nifty_close, "Close: " + close);
                             appWidgetManager.updateAppWidget(appWidgetId, views);
                         }
+                        nifty50Found = true;
                         break;
                     }
                 }
-            } catch (Exception e) {
-                e.printStackTrace();
-                for (int appWidgetId : appWidgetIds) {
-                    RemoteViews views = new RemoteViews(getPackageName(), R.layout.nifty_widget_layout);
-                    views.setTextViewText(R.id.nifty_price, "Error");
-                    appWidgetManager.updateAppWidget(appWidgetId, views);
+                if (!nifty50Found) {
+                    Log.e(TAG, "NIFTY 50 data not found in API response.");
+                    updateWidgetWithError(appWidgetManager, appWidgetIds);
                 }
+            } catch (Exception e) {
+                Log.e(TAG, "Error fetching or parsing data", e);
+                updateWidgetWithError(appWidgetManager, appWidgetIds);
             }
         }).start();
+    }
+
+    private void updateWidgetWithError(AppWidgetManager appWidgetManager, int[] appWidgetIds) {
+        for (int appWidgetId : appWidgetIds) {
+            RemoteViews views = new RemoteViews(getPackageName(), R.layout.nifty_widget_layout);
+            views.setTextViewText(R.id.nifty_price, "Error");
+            appWidgetManager.updateAppWidget(appWidgetId, views);
+        }
     }
 
     private final Handler handler = new Handler(Looper.getMainLooper());
