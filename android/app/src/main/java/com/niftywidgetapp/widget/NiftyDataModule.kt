@@ -23,22 +23,8 @@ class NiftyDataModule(reactContext: ReactApplicationContext) : ReactContextBaseJ
     fun getNiftyData(promise: Promise) {
         Thread {
             try {
-                val url = URL("https://www.nseindia.com/api/allIndices")
-                val connection = url.openConnection() as HttpURLConnection
-                connection.setRequestProperty("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/108.0.0.0 Safari/537.36")
-                connection.setRequestProperty("Accept", "*/*")
-                connection.setRequestProperty("Accept-Language", "en-US,en;q=0.9")
-
-                val `in` = BufferedReader(InputStreamReader(connection.inputStream))
-                var inputLine: String?
-                val content = StringBuilder()
-                while (`in`.readLine().also { inputLine = it } != null) {
-                    content.append(inputLine)
-                }
-                `in`.close()
-                connection.disconnect()
-
-                promise.resolve(content.toString())
+                val data = NiftyDataFetcher.getNiftyData()
+                promise.resolve(data)
             } catch (e: Exception) {
                 promise.reject("Error", e.message)
             }
