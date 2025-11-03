@@ -54,4 +54,14 @@
         android:textColor="#000000"
         android:textSize="16sp" />
 
+    <TextView
+        android:id="@+id/nifty_change"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/nifty_open"
+        android:layout_centerHorizontal="true"
+        android:text="--.-- (--.--)%"
+        android:textColor="#000000"
+        android:textSize="16sp" />
+
 </RelativeLayout>
