@@ -51,6 +51,8 @@ public class NiftyWidgetService extends Service {
                         String high = index.getString("high");
                         String low = index.getString("low");
                         String close = index.getString("previousClose");
+                        String change = index.getString("variation");
+                        String percentChange = index.getString("percentChange");
 
                         for (int appWidgetId : appWidgetIds) {
                             RemoteViews views = new RemoteViews(getPackageName(), R.layout.nifty_widget_layout);
@@ -59,6 +61,7 @@ public class NiftyWidgetService extends Service {
                             views.setTextViewText(R.id.nifty_high, "High: " + high);
                             views.setTextViewText(R.id.nifty_low, "Low: " + low);
                             views.setTextViewText(R.id.nifty_close, "Close: " + close);
+                            views.setTextViewText(R.id.nifty_change, change + " (" + percentChange + "%)");
                             appWidgetManager.updateAppWidget(appWidgetId, views);
                         }
                         nifty50Found = true;
