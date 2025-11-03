@@ -41,21 +41,45 @@ function AppContent() {
     };
 
     fetchData();
-    const interval = setInterval(fetchData, 5000);
+    const interval = setInterval(fetchData, 3000);
 
     return () => clearInterval(interval);
   }, []);
 
+  const getPriceColor = () => {
+    if (!niftyData) return '#FFFFFF';
+    return niftyData.percentChange > 0 ? '#4CAF50' : '#F44336';
+  };
+
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Nifty 50 Live Data</Text>
+      <Text style={styles.title}>Nifty 50 Live</Text>
       {niftyData ? (
-        <View>
-          <Text style={styles.text}>Price: {niftyData.last}</Text>
-          <Text style={styles.text}>Open: {niftyData.open}</Text>
-          <Text style={styles.text}>High: {niftyData.high}</Text>
-          <Text style={styles.text}>Low: {niftyData.low}</Text>
-          <Text style={styles.text}>Close: {niftyData.previousClose}</Text>
+        <View style={styles.card}>
+          <Text style={[styles.price, { color: getPriceColor() }]}>{niftyData.last}</Text>
+          <Text style={[styles.change, { color: getPriceColor() }]}>
+            {niftyData.variation} ({niftyData.percentChange}%)
+          </Text>
+          <View style={styles.row}>
+            <View style={styles.col}>
+              <Text style={styles.label}>Open</Text>
+              <Text style={styles.value}>{niftyData.open}</Text>
+            </View>
+            <View style={styles.col}>
+              <Text style={styles.label}>High</Text>
+              <Text style={styles.value}>{niftyData.high}</Text>
+            </View>
+          </View>
+          <View style={styles.row}>
+            <View style={styles.col}>
+              <Text style={styles.label}>Low</Text>
+              <Text style={styles.value}>{niftyData.low}</Text>
+            </View>
+            <View style={styles.col}>
+              <Text style={styles.label}>Close</Text>
+              <Text style={styles.value}>{niftyData.previousClose}</Text>
+            </View>
+          </View>
         </View>
       ) : (
         <Text style={styles.text}>Loading...</Text>
@@ -69,15 +93,51 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+    backgroundColor: '#1E2A3E',
   },
   title: {
-    fontSize: 24,
+    fontSize: 32,
     fontWeight: 'bold',
+    color: '#FFFFFF',
     marginBottom: 20,
+  },
+  card: {
+    backgroundColor: '#2A3B52',
+    borderRadius: 10,
+    padding: 20,
+    width: '90%',
+  },
+  price: {
+    fontSize: 48,
+    fontWeight: 'bold',
+    textAlign: 'center',
+  },
+  change: {
+    fontSize: 18,
+    textAlign: 'center',
+    marginBottom: 20,
+  },
+  row: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 10,
+  },
+  col: {
+    flex: 1,
+    alignItems: 'center',
+  },
+  label: {
+    fontSize: 16,
+    color: '#87CEEB',
+  },
+  value: {
+    fontSize: 20,
+    color: '#FFFFFF',
+    fontWeight: 'bold',
   },
   text: {
     fontSize: 18,
-    marginBottom: 10,
+    color: '#FFFFFF',
   },
 });
 
