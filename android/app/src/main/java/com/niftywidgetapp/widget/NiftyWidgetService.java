@@ -83,6 +83,11 @@ public class NiftyWidgetService extends Service {
         for (int appWidgetId : appWidgetIds) {
             RemoteViews views = new RemoteViews(getPackageName(), R.layout.nifty_widget_layout);
             views.setTextViewText(R.id.nifty_price, "Error");
+            views.setTextViewText(R.id.nifty_open, "");
+            views.setTextViewText(R.id.nifty_high, "");
+            views.setTextViewText(R.id.nifty_low, "");
+            views.setTextViewText(R.id.nifty_close, "");
+            views.setTextViewText(R.id.nifty_change, "");
             appWidgetManager.updateAppWidget(appWidgetId, views);
         }
     }
